@@ -21,7 +21,7 @@ void loop() {
   delay(10);
 
   //voltage in hall effekt pin
-  voltageValue = hallEffektValue*5/1023;
+  voltageValue = hallEffektValue*3.3/4095;
   Serial.println(voltageValue, DEC); // print as an ASCII-encoded decimal
   delay(10);
 
