@@ -8,7 +8,9 @@
 
 
 
-unsigned char fejl = 0b01000000;
+unsigned char fejl = 0b0000001;
+int tidligerFejl = 0;
+uint32_t i=0;
 
 BluetoothSerial SerialBT;     // Create a Bluetooth Serial object
 void setup() {
@@ -16,26 +18,28 @@ void setup() {
   SerialBT.begin("ESP32_Transmitter"); // Set Bluetooth name to "ESP32_Transmitter"
   Serial.println("Bluetooth Device is ready to pair");
 }
-/*
-void message(int fejl){
-   switch (fejl)
-  {
-  case 1: SerialBT.print("fejl 1"); Serial.println("fejl 1"); break; //Fejl 1 is being sent via bluetooth
-  case 2: SerialBT.print("fejl 2"); Serial.println("fejl 2"); break;
-
-  default:
-    break;
-  }
-}
-*/
 
 void loop() {
   //message(fejl);
-  SerialBT.print(fejl);
-  Serial.println(fejl);
-  delay(5000); // Wait 5 seconds before sending again
+  //delay(1000); // Wait 30 seconds before sending again
+  if (fejl !=  tidligerFejl){
+    tidligerFejl = fejl;
+    SerialBT.print(fejl);
+    Serial.println(fejl);
+  }
+
+  i++;
+  if (i>1800000){
+    fejl = (fejl+1)%64;
+    i = 0;
+  }
+
+
+
 
 }
+
+
 
 
 
