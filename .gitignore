@@ -1,7 +1,7 @@
-.pio
-.clang_complete
-.ccls
-.direnv
-.platformio-dir
+.pio/
+.clang_complete/
+.ccls/
+.cache/
+.direnv/
 compile_commands.json
-.vscode
+.vscode/
