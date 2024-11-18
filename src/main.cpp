@@ -30,5 +30,5 @@ void loop() {
 
   Serial.print("Error code: ");
   Serial.println(errorBite, BIN);
-  delay(100);
+  delay(500);
 }

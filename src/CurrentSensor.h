@@ -19,6 +19,8 @@ private:
   float _amplification;
   float _resistenceSensor;
   float _mainVoltage;
+
+  float monitor_current_internal();
   void debug_print(float adcSensorVal, float voltageAmplified,
                    float voltageSensor, float currentSensor,
                    float resistenceLamp);

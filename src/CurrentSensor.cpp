@@ -1,4 +1,5 @@
 #include "CurrentSensor.h"
+#include "esp32-hal-gpio.h"
 #include <cstdint>
 
 CurrentSensor::CurrentSensor(unsigned char wire, int8_t pinSensor,
@@ -13,10 +14,27 @@ CurrentSensor::CurrentSensor(unsigned char wire, int8_t pinSensor,
   _resistenceSensor = resistenceSensor;
   _mainVoltage = mainVoltage;
 
+  pinMode(_pinInput, INPUT_PULLDOWN);
   pinMode(_pinDebugLED, OUTPUT);
 }
 
 unsigned char CurrentSensor::monitor_current() {
+
+  if (digitalRead(_pinInput)) {
+    if (CurrentSensor::monitor_current_internal() > 100.0) {
+      CurrentSensor::led_on();
+      return _wire;
+    } else {
+      CurrentSensor::led_off();
+      return 0b0;
+    }
+  } else {
+    CurrentSensor::led_off();
+    return 0b0;
+  }
+}
+
+float CurrentSensor::monitor_current_internal() {
 
   // analog read voltage from amplifier
   uint16_t adcSensorVal = analogRead(_pinSensor);
@@ -40,14 +58,7 @@ unsigned char CurrentSensor::monitor_current() {
 
   debug_print(adcSensorVal, voltageAmplified, voltageSensor, currentSensor,
               resistenceLamp);
-
-  if (resistenceLamp > 100.0) {
-    CurrentSensor::led_on();
-    return _wire;
-  } else {
-    CurrentSensor::led_off();
-    return 0b0;
-  }
+  return resistenceLamp;
 }
 
 void CurrentSensor::debug_print(float adcSensorVal, float voltageAmplified,
