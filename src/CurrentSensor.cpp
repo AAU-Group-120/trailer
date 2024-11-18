@@ -1,22 +1,29 @@
 #include "CurrentSensor.h"
 #include <cstdint>
 
-CurrentSensor::CurrentSensor(int8_t pin, float amplification,
-                             float resistenceSensor, float mainVoltage) {
-  _pin = pin;
+CurrentSensor::CurrentSensor(unsigned char wire, int8_t pinSensor,
+                             int8_t pinInput, int8_t pinDebugLED,
+                             float amplification, float resistenceSensor,
+                             float mainVoltage) {
+  _wire = wire;
+  _pinSensor = pinSensor;
+  _pinInput = pinInput;
+  _pinDebugLED = pinDebugLED;
   _amplification = amplification;
   _resistenceSensor = resistenceSensor;
   _mainVoltage = mainVoltage;
+
+  pinMode(_pinDebugLED, OUTPUT);
 }
 
-float CurrentSensor::monitor_current() {
+unsigned char CurrentSensor::monitor_current() {
 
   // analog read voltage from amplifier
-  uint16_t adcSensorVal = analogRead(_pin);
+  uint16_t adcSensorVal = analogRead(_pinSensor);
 
   // amplified voltage read on analog pin
   // \[ V_\text{A} = n_\text{adc} / n_\text{max} * 3.3 \si{V} \]
-  float voltageAmplified = adcSensorVal / 4095 * 3.3;
+  float voltageAmplified = adcSensorVal / (float)4095 * 3.3;
 
   // calculating voltage over shunt
   // \[ V_\text{sens} = V_\text{A}/A \]
@@ -34,7 +41,13 @@ float CurrentSensor::monitor_current() {
   debug_print(adcSensorVal, voltageAmplified, voltageSensor, currentSensor,
               resistenceLamp);
 
-  return resistenceLamp;
+  if (resistenceLamp > 100.0) {
+    CurrentSensor::led_on();
+    return _wire;
+  } else {
+    CurrentSensor::led_off();
+    return 0b0;
+  }
 }
 
 void CurrentSensor::debug_print(float adcSensorVal, float voltageAmplified,
@@ -54,7 +67,7 @@ void CurrentSensor::debug_print(float adcSensorVal, float voltageAmplified,
   Serial.print("[0;0H");
 
   Serial.print("Adc on pin ");
-  Serial.print(_pin);
+  Serial.print(_pinSensor);
   Serial.print(" is value: ");
   Serial.write(27);
   Serial.print("[K");                // Down one
@@ -83,3 +96,7 @@ void CurrentSensor::debug_print(float adcSensorVal, float voltageAmplified,
   Serial.print("[K");
   Serial.println(resistenceLamp, DEC);
 }
+
+void CurrentSensor::led_on() { digitalWrite(_pinDebugLED, HIGH); }
+
+void CurrentSensor::led_off() { digitalWrite(_pinDebugLED, LOW); }
