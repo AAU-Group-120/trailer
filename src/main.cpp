@@ -2,10 +2,12 @@
 #include "BluetoothSerial.h"
 #include "CurrentSensor.h"
 #include "HardwareSerial.h"
+#include "WString.h"
 #include "esp32-hal.h"
 #include "stdint.h"
 #include <cstdint>
 
+#define ACK 0b110
 float mainVoltage = 12;
 
 enum Wire : unsigned char {
@@ -20,9 +22,13 @@ enum Wire : unsigned char {
 CurrentSensor RightSensor(RightBlink, 39, 36, 23, 0.681 / 0.059, 0.15,
                           mainVoltage);
 
-unsigned char fejl = 0b0000001;
-int tidligerFejl = 0;
-uint32_t i = 0;
+unsigned char lastErrorByte = 0b0;
+
+uint32_t delayTime = 1000; // in miliseconds
+uint32_t lastDelayTime = millis();
+
+uint32_t ackTime = 1000; // in miliseconds
+uint32_t lastAckTime = millis();
 
 BluetoothSerial SerialBT; // Create a Bluetooth Serial object
 void setup() {
@@ -33,25 +39,41 @@ void setup() {
 }
 
 void loop() {
-  // message(fejl);
-  // delay(1000); // Wait 30 seconds before sending again
-  if (fejl != tidligerFejl) {
-    tidligerFejl = fejl;
-    SerialBT.print(fejl);
-    Serial.println(fejl);
+
+  if ((lastDelayTime + delayTime) < millis()) {
+    lastDelayTime = millis();
+
+    unsigned char errorBite = 0b0;
+
+    errorBite = errorBite | RightSensor.monitor_current();
+
+    // errorBite = errorBite | LeftBlink | LeftLight;
+
+    unsigned char data = 0b0;
+
+    if (errorBite != lastErrorByte) {
+      lastErrorByte = errorBite;
+      SerialBT.print(errorBite);
+    }
+
+    while (!(data == ACK)) {
+
+      if (SerialBT.available()) {
+        String recivedData = SerialBT.readString();
+        data = recivedData[recivedData.length() - 1];
+        Serial.println(data, BIN);
+      }
+
+      if ((lastAckTime + ackTime) < millis()) {
+        lastAckTime = millis();
+
+        SerialBT.write(errorBite);
+        SerialBT.write(0b10000000);
+        // SerialBT.print("\0");
+
+        Serial.print("Error code: ");
+        Serial.println(errorBite, BIN);
+      }
+    }
   }
-
-  i++;
-  if (i > 1800000) {
-    fejl = (fejl + 1) % 64;
-    i = 0;
-  }
-
-  unsigned char errorBite;
-
-  errorBite = errorBite | RightSensor.monitor_current();
-
-  Serial.print("Error code: ");
-  Serial.println(errorBite, BIN);
-  delay(500);
 }
