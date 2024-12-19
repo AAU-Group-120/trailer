@@ -19,7 +19,7 @@ enum Wire : unsigned char {
   Fog = 0b100000,
 };
 
-CurrentSensor RightSensor(RightBlink, 39, 36, 23, 0.681 / 0.059, 0.15,
+CurrentSensor RightSensor(RightBlink, 39, 36, 23, 11, 0.15,
                           mainVoltage);
 
 unsigned char lastErrorByte = 0b0;
