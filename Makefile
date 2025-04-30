@@ -18,4 +18,7 @@ run:
 monitor:
 	pio device monitor --raw
 
+emacs:
+	pio run -t compiledb
+
 # end
